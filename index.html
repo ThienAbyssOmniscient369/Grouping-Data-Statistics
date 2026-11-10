@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Tính Toán Thống Kê Ghép Nhóm - Toán 12</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- KaTeX CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
+        
+        * {
+            font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .katex {
+            font-size: 1.05em;
+        }
+
+        .katex-display {
+            margin: 0.6em 0 !important;
+        }
+
+        /* Custom scrollbar for tables */
+        ::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-violet-200">
+                    <i class="fa-solid fa-chart-column"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Thống Kê Mẫu Số Liệu Ghép Nhóm</h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">Chương trình Toán 12 • Hỗ trợ tự động tính toán & giải chi tiết</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="resetDefault()" class="px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Dữ liệu mẫu</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-grow">
+
+        <!-- Input Mode Switcher Card -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-7 mb-8">
+            
+            <!-- Mode Toggle Tabs -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-violet-600"></i> Phương Thức Nhập Dữ Liệu
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Chọn chế độ nhập trực tiếp bảng tần số hoặc nhập số liệu ngẫu nhiên.</p>
+                </div>
+
+                <div class="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200 text-xs sm:text-sm font-semibold self-start sm:self-auto">
+                    <button type="button" id="tab-btn-table" onclick="switchMode('table')" 
+                        class="px-4 py-2 rounded-xl transition-all duration-200 bg-white text-violet-700 shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-table-list"></i>
+                        <span>1. Bảng ghép nhóm</span>
+                    </button>
+                    <button type="button" id="tab-btn-random" onclick="switchMode('random')" 
+                        class="px-4 py-2 rounded-xl transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-dice"></i>
+                        <span>2. Tạo số ngẫu nhiên</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CHẾ ĐỘ 1: BẢNG PHÂN PHỐI TẦN SỐ -->
+            <div id="mode-table-container">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div class="text-xs sm:text-sm text-slate-600 font-medium">
+                        Điền các khoảng $[u_i; u_{i+1})$ và tần số tương ứng $n_i$:
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="addNewRow()" class="px-3.5 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-700 font-semibold text-xs transition border border-violet-200 flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Thêm nhóm
+                        </button>
+                        <button type="button" onclick="clearAllData()" class="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-xs transition border border-slate-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-eraser"></i> Xóa bảng
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bảng nhập liệu -->
+                <div class="overflow-x-auto rounded-2xl border border-slate-200">
+                    <table class="w-full text-left text-sm border-collapse" id="input-table">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 text-xs uppercase tracking-wide">
+                                <th class="py-3 px-3 text-center w-12">#</th>
+                                <th class="py-3 px-4 min-w-[130px]">Mút trái ($u_i$)</th>
+                                <th class="py-3 px-4 min-w-[130px]">Mút phải ($u_{i+1}$)</th>
+                                <th class="py-3 px-4 min-w-[130px]">Tần số ($n_i$)</th>
+                                <th class="py-3 px-4 bg-slate-100/60 text-slate-500 min-w-[120px] text-center">Đại diện ($c_i$)</th>
+                                <th class="py-3 px-3 text-center w-12">Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="group-rows" class="divide-y divide-slate-100">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CHẾ ĐỘ 2: NHẬP / TẠO SỐ NGẪU NHIÊN -->
+            <div id="mode-random-container" class="hidden space-y-5">
+                <div class="bg-violet-50/50 border border-violet-100 rounded-2xl p-4 sm:p-5">
+                    <h3 class="text-sm font-bold text-violet-900 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-violet-600"></i> Công cụ sinh ngẫu nhiên số liệu
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Số lượng mẫu ($n$):</label>
+                            <input type="number" id="rand-count" value="30" min="5" max="200" 
+                                class="w-full px-3 py-2 text-sm font-semibold border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Giá trị nhỏ nhất ($Min$):</label>
+                            <input type="number" id="rand-min" value="10" 
+                                class="w-full px-3 py-2 text-sm font-semibold border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Giá trị lớn nhất ($Max$):</label>
+                            <input type="number" id="rand-max" value="90" 
+                                class="w-full px-3 py-2 text-sm font-semibold border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Số nhóm chia ($k$):</label>
+                            <input type="number" id="rand-k" value="5" min="2" max="15" 
+                                class="w-full px-3 py-2 text-sm font-semibold border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 bg-white">
+                        </div>
+                    </div>
+
+                    <div class="mt-3.5 flex flex-wrap gap-2">
+                        <button type="button" onclick="generateRandomDataset()" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-dice-d20"></i> Tạo ngẫu nhiên số liệu
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Textarea cho phép xem hoặc tự gõ số liệu -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-bold text-slate-700">Dãy số liệu thô (các số cách nhau bởi dấu phẩy hoặc khoảng trắng):</label>
+                        <span class="text-xs text-slate-500" id="raw-count-label">0 phần tử</span>
+                    </div>
+                    <textarea id="raw-data-input" rows="3" placeholder="Ví dụ: 12, 15, 23, 24, 35, 42, 45, 55, 60..."
+                        class="w-full p-3.5 text-xs sm:text-sm code-font border border-slate-200 rounded-2xl focus:ring-2 focus:ring-violet-500 bg-white"
+                        oninput="updateRawCount()"></textarea>
+                    
+                    <div class="flex items-center justify-between mt-2">
+                        <p class="text-xs text-slate-400">Bạn có thể tự gõ thêm hoặc sửa các số theo ý muốn.</p>
+                        <button type="button" onclick="convertRawToGroups()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-object-group"></i> Gom thành bảng ghép nhóm
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview bảng gom nhóm từ dữ liệu ngẫu nhiên -->
+                <div id="random-group-preview" class="hidden">
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-table text-violet-600"></i> Bảng ghép nhóm được tạo tự động:
+                    </h4>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-center text-xs" id="preview-table">
+                            <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="py-2 px-3">Nhóm</th>
+                                    <th class="py-2 px-3">Khoảng giá trị</th>
+                                    <th class="py-2 px-3">Giá trị đại diện ($c_i$)</th>
+                                    <th class="py-2 px-3">Tần số ($n_i$)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="preview-table-body" class="divide-y divide-slate-100">
+                                <!-- Generated automatically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Info & Submit Trigger -->
+            <div class="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3 text-sm text-slate-600 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 w-full sm:w-auto">
+                    <span class="font-semibold text-slate-800">Cỡ mẫu ($n$):</span>
+                    <span id="quick-total-n" class="px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-800 font-bold code-font">20</span>
+                    <span class="text-xs text-slate-400">• Tổng cộng: <span id="group-count">4</span> nhóm</span>
+                </div>
+
+                <button type="button" onclick="computeAll()" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 active:scale-[0.99] text-white font-bold text-base shadow-lg shadow-violet-200 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-calculator text-amber-300"></i>
+                    <span>Tính kết quả ngay</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Clean Minimalist Results Dashboard (Chỉ hiện kết quả, bấm vào xem chi tiết) -->
+        <div id="results-wrapper" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-square-poll-horizontal text-emerald-600"></i> Bảng Đáp Số Rút Gọn
+                    </h3>
+                    <p class="text-xs text-slate-500">Chỉ hiển thị các kết quả tính toán. Bấm vào từng ô để xem <b>công thức và các bước thế số chi tiết</b>.</p>
+                </div>
+                <div class="inline-flex items-center gap-1.5 text-xs text-violet-700 bg-violet-50 px-3 py-1.5 rounded-lg border border-violet-200 font-semibold self-start sm:self-auto">
+                    <i class="fa-solid fa-hand-pointer"></i> Bấm vào thẻ để xem cách làm
+                </div>
+            </div>
+
+            <!-- Cards Grid: Minimalist Numbers Only -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="cards-container">
+                
+                <!-- Số trung bình -->
+                <div onclick="openDetail('mean')" class="group cursor-pointer bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-violet-400 transition flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Xu thế trung tâm</span>
+                        <span class="text-violet-600 opacity-0 group-hover:opacity-100 transition text-xs font-bold flex items-center gap-1">
+                            Xem cách làm <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-600 font-semibold">Số trung bình ($\bar{x}$)</div>
+                        <div class="text-3xl font-extrabold text-slate-900 mt-1 code-font" id="val-mean">--</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>$\bar{x} = \frac{1}{n}\sum n_ic_i$</span>
+                        <span class="text-violet-600 font-semibold underline">Chi tiết</span>
+                    </div>
+                </div>
+
+                <!-- Trung vị -->
+                <div onclick="openDetail('median')" class="group cursor-pointer bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-violet-400 transition flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Xu thế trung tâm</span>
+                        <span class="text-violet-600 opacity-0 group-hover:opacity-100 transition text-xs font-bold flex items-center gap-1">
+                            Xem cách làm <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-600 font-semibold">Trung vị ($M_e = Q_2$)</div>
+                        <div class="text-3xl font-extrabold text-indigo-600 mt-1 code-font" id="val-median">--</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Vị trí $50\%$ số liệu</span>
+                        <span class="text-violet-600 font-semibold underline">Chi tiết</span>
+                    </div>
+                </div>
+
+                <!-- Mốt -->
+                <div onclick="openDetail('mode')" class="group cursor-pointer bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-violet-400 transition flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Xu thế trung tâm</span>
+                        <span class="text-violet-600 opacity-0 group-hover:opacity-100 transition text-xs font-bold flex items-center gap-1">
+                            Xem cách làm <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-600 font-semibold">Mốt ($M_o$)</div>
+                        <div class="text-3xl font-extrabold text-emerald-600 mt-1 code-font" id="val-mode">--</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Nhóm có $n_i$ lớn nhất</span>
+                        <span class="text-violet-600 font-semibold underline">Chi tiết</span>
+                    </div>
+                </div>
+
+                <!-- Khoảng biến thiên -->
+                <div onclick="openDetail('range')" class="group cursor-pointer bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-violet-400 transition flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Độ phân tán</span>
+                        <span class="text-violet-600 opacity-0 group-hover:opacity-100 transition text-xs font-bold flex items-center gap-1">
+                            Xem cách làm <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-600 font-semibold">Khoảng biến thiên ($R$)</div>
+                        <div class="text-3xl font-extrabold text-pink-600 mt-1 code-font" id="val-range">--</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>$R = u_{k+1} - u_1$</span>
+                        <span class="text-violet-600 font-semibold underline">Chi tiết</span>
+                    </div>
+                </div>
+
+                <!-- Tứ phân vị thứ nhất Q1 -->
+                <div onclick="openDetail('q1')" class="group cursor-pointer bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-violet-400 transition flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tứ phân vị</span>
+                        <span class="text-violet-600 opacity-0 group-hover:opacity-100 transition text-xs font-bold flex items-center gap-1">
+                            Xem cách làm <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-600 font-semibold">Tứ phân vị thứ nhất ($Q_1$)</div>
+                        <div class="text-3xl font-extrabold text-sky-600 mt-1 code-font" id="val-q1">--</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Vị trí $25\%$ số liệu</span>
+                        <span class="text-violet-600 font-semibold underline">Chi tiết</span>
+                    </div>
+                </div>
+
+                <!-- Tứ phân vị thứ ba Q3 -->
+                <div onclick="openDetail('q3')" class="group cursor-pointer bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-violet-400 transition flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tứ phân vị</span>
+                        <span class="text-violet-600 opacity-0 group-hover:opacity-100 transition text-xs font-bold flex items-center gap-1">
+                            Xem cách làm <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-600 font-semibold">Tứ phân vị thứ ba ($Q_3$)</div>
+                        <div class="text-3xl font-extrabold text-cyan-600 mt-1 code-font" id="val-q3">--</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Vị trí $75\%$ số liệu</span>
+                        <span class="text-violet-600 font-semibold underline">Chi tiết</span>
+                    </div>
+                </div>
+
+                <!-- Khoảng tứ phân vị Delta_Q -->
+                <div onclick="openDetail('iqr')" class="group cursor-pointer bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-violet-400 transition flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Độ phân tán</span>
+                        <span class="text-violet-600 opacity-0 group-hover:opacity-100 transition text-xs font-bold flex items-center gap-1">
+                            Xem cách làm <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-600 font-semibold">Khoảng tứ phân vị ($\Delta_Q$)</div>
+                        <div class="text-3xl font-extrabold text-blue-600 mt-1 code-font" id="val-iqr">--</div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>$\Delta_Q = Q_3 - Q_1$</span>
+                        <span class="text-violet-600 font-semibold underline">Chi tiết</span>
+                    </div>
+                </div>
+
+                <!-- Phương sai & Độ lệch chuẩn -->
+                <div onclick="openDetail('var_sd')" class="group cursor-pointer bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-violet-400 transition flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Độ phân tán cốt lõi</span>
+                        <span class="text-violet-600 opacity-0 group-hover:opacity-100 transition text-xs font-bold flex items-center gap-1">
+                            Xem cách làm <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-600 font-semibold">Phương sai ($S^2$) / Độ lệch chuẩn ($S$)</div>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="text-2xl font-extrabold text-violet-700 code-font" id="val-var">--</span>
+                            <span class="text-slate-400">/</span>
+                            <span class="text-2xl font-extrabold text-teal-600 code-font" id="val-sd">--</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>$S = \sqrt{S^2}$</span>
+                        <span class="text-violet-600 font-semibold underline">Chi tiết</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Value Outliers Summary Banner -->
+            <div onclick="openDetail('outliers')" class="cursor-pointer bg-amber-50/80 hover:bg-amber-100/80 border border-amber-200 rounded-2xl p-4 sm:p-5 transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                <div class="flex items-start gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-base shrink-0 shadow-sm">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-900">Điều Kiện Giá Trị Ngoại Lệ</h4>
+                        <p class="text-xs text-slate-600 mt-0.5" id="val-outliers-text">
+                            $x < \text{--}$ hoặc $x > \text{--}$
+                        </p>
+                    </div>
+                </div>
+                <button type="button" class="text-xs font-bold text-amber-800 bg-white border border-amber-300 px-3.5 py-1.5 rounded-xl shadow-xs hover:bg-amber-50 self-end sm:self-center">
+                    Xem công thức & giải thích chi tiết <i class="fa-solid fa-chevron-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Deep Dive Modal: Công thức & Cách làm chi tiết -->
+    <div id="detail-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 my-8 transform transition-all text-left">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div id="modal-icon-container" class="w-10 h-10 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center text-lg font-bold">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900" id="modal-title">Công thức & Cách làm</h3>
+                        <p class="text-xs text-slate-400" id="modal-subtitle">Các bước xác định tham số và thế số chi tiết</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-1" id="modal-content">
+                <!-- 1. Formula Card -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">1. Công thức áp dụng</div>
+                    <div class="text-center py-2 text-slate-900 overflow-x-auto text-sm sm:text-base" id="modal-formula">
+                        <!-- KaTeX Formula -->
+                    </div>
+                </div>
+
+                <!-- 2. Parameters list -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">2. Xác định các tham số từ bảng dữ liệu</div>
+                    <div class="space-y-1.5 text-xs sm:text-sm text-slate-700" id="modal-params">
+                        <!-- Dynamic Params List -->
+                    </div>
+                </div>
+
+                <!-- 3. Steps and final substitute calculation -->
+                <div class="bg-violet-50/70 border border-violet-200 rounded-2xl p-4">
+                    <div class="text-xs font-bold text-violet-800 uppercase tracking-wider mb-2">3. Các bước thế số và kết quả cuối cùng</div>
+                    <div class="text-xs sm:text-sm text-slate-800 space-y-2" id="modal-steps">
+                        <!-- Dynamic Steps -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="pt-4 border-t border-slate-100 flex justify-end">
+                <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition">
+                    Đã hiểu & Đóng lại
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-auto">
+        Ứng dụng tính toán thống kê mẫu số liệu ghép nhóm • Font chữ chuẩn Tiếng Việt
+    </footer>
+
+    <script>
+        // State
+        let activeMode = 'table'; // 'table' or 'random'
+        let groups = [
+            { lower: 0, upper: 5, freq: 4 },
+            { lower: 5, upper: 10, freq: 6 },
+            { lower: 10, upper: 15, freq: 8 },
+            { lower: 15, upper: 20, freq: 2 }
+        ];
+
+        let currentCalculations = {};
+
+        // Switch Mode
+        function switchMode(mode) {
+            activeMode = mode;
+            const btnTable = document.getElementById('tab-btn-table');
+            const btnRand = document.getElementById('tab-btn-random');
+            const contTable = document.getElementById('mode-table-container');
+            const contRand = document.getElementById('mode-random-container');
+
+            if (mode === 'table') {
+                btnTable.className = "px-4 py-2 rounded-xl transition-all duration-200 bg-white text-violet-700 shadow-sm flex items-center gap-2";
+                btnRand.className = "px-4 py-2 rounded-xl transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center gap-2";
+                contTable.classList.remove('hidden');
+                contRand.classList.add('hidden');
+                renderTableRows();
+            } else {
+                btnRand.className = "px-4 py-2 rounded-xl transition-all duration-200 bg-white text-violet-700 shadow-sm flex items-center gap-2";
+                btnTable.className = "px-4 py-2 rounded-xl transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center gap-2";
+                contRand.classList.remove('hidden');
+                contTable.classList.add('hidden');
+                
+                // If raw input empty, generate some samples
+                if (!document.getElementById('raw-data-input').value.trim()) {
+                    generateRandomDataset();
+                }
+            }
+        }
+
+        // ==========================================
+        // CHẾ ĐỘ 1: BẢNG PHÂN PHỐI TẦN SỐ
+        // ==========================================
+        function renderTableRows() {
+            const tbody = document.getElementById('group-rows');
+            tbody.innerHTML = '';
+
+            let totalN = 0;
+
+            groups.forEach((g, idx) => {
+                totalN += (Number(g.freq) || 0);
+                const mid = (g.lower + g.upper) / 2;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition";
+
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 text-center text-xs font-bold text-slate-400">${idx + 1}</td>
+                    <td class="py-2 px-3">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-slate-400 text-xs font-bold">[</span>
+                            <input type="number" step="any" value="${g.lower}" onchange="updateRow(${idx}, 'lower', this.value)"
+                                class="w-full sm:w-28 px-3 py-1.5 text-sm font-semibold border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white">
+                            <span class="text-slate-400 text-xs font-bold">;</span>
+                        </div>
+                    </td>
+                    <td class="py-2 px-3">
+                        <div class="flex items-center gap-1.5">
+                            <input type="number" step="any" value="${g.upper}" onchange="updateRow(${idx}, 'upper', this.value)"
+                                class="w-full sm:w-28 px-3 py-1.5 text-sm font-semibold border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white">
+                            <span class="text-slate-400 text-xs font-bold">)</span>
+                        </div>
+                    </td>
+                    <td class="py-2 px-3">
+                        <input type="number" min="0" step="1" value="${g.freq}" onchange="updateRow(${idx}, 'freq', this.value)"
+                            class="w-full sm:w-28 px-3 py-1.5 text-sm font-bold text-violet-700 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white">
+                    </td>
+                    <td class="py-2 px-3 bg-slate-50 text-center font-bold text-slate-600 text-xs code-font">
+                        ${isNaN(mid) ? '--' : mid.toFixed(1)}
+                    </td>
+                    <td class="py-2 px-3 text-center">
+                        <button type="button" onclick="deleteRow(${idx})" class="w-8 h-8 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition flex items-center justify-center mx-auto" title="Xóa nhóm này">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('quick-total-n').textContent = totalN;
+            document.getElementById('group-count').textContent = groups.length;
+        }
+
+        function updateRow(idx, field, val) {
+            groups[idx][field] = parseFloat(val) || 0;
+            renderTableRows();
+        }
+
+        function addNewRow() {
+            const last = groups[groups.length - 1];
+            const lower = last ? last.upper : 0;
+            const step = last ? Math.max(1, (last.upper - last.lower)) : 5;
+            groups.push({ lower: lower, upper: lower + step, freq: 5 });
+            renderTableRows();
+        }
+
+        function deleteRow(idx) {
+            if (groups.length <= 1) return;
+            groups.splice(idx, 1);
+            renderTableRows();
+        }
+
+        function clearAllData() {
+            groups = [
+                { lower: 0, upper: 10, freq: 0 }
+            ];
+            renderTableRows();
+        }
+
+        function resetDefault() {
+            groups = [
+                { lower: 0, upper: 5, freq: 4 },
+                { lower: 5, upper: 10, freq: 6 },
+                { lower: 10, upper: 15, freq: 8 },
+                { lower: 15, upper: 20, freq: 2 }
+            ];
+            renderTableRows();
+            computeAll();
+        }
+
+        // ==========================================
+        // CHẾ ĐỘ 2: SINH SỐ NGẪU NHIÊN & GOM NHÓM
+        // ==========================================
+        function generateRandomDataset() {
+            const n = parseInt(document.getElementById('rand-count').value) || 30;
+            const min = parseFloat(document.getElementById('rand-min').value) || 10;
+            const max = parseFloat(document.getElementById('rand-max').value) || 90;
+
+            if (min >= max) {
+                alert("Giá trị nhỏ nhất phải bé hơn giá trị lớn nhất!");
+                return;
+            }
+
+            const arr = [];
+            for (let i = 0; i < n; i++) {
+                // Tạo số nguyên ngẫu nhiên hoặc số thập phân 1 chữ số
+                const val = Math.floor(Math.random() * (max - min + 1)) + min;
+                arr.push(val);
+            }
+
+            arr.sort((a, b) => a - b);
+            document.getElementById('raw-data-input').value = arr.join(', ');
+            updateRawCount();
+            convertRawToGroups();
+        }
+
+        function updateRawCount() {
+            const text = document.getElementById('raw-data-input').value;
+            const numbers = parseRawNumbers(text);
+            document.getElementById('raw-count-label').textContent = `${numbers.length} phần tử`;
+        }
+
+        function parseRawNumbers(str) {
+            return str
+                .replace(/;/g, ',')
+                .split(/[,\s]+/)
+                .map(v => parseFloat(v.trim()))
+                .filter(v => !isNaN(v));
+        }
+
+        function convertRawToGroups() {
+            const text = document.getElementById('raw-data-input').value;
+            const numbers = parseRawNumbers(text);
+
+            if (numbers.length === 0) {
+                alert("Vui lòng nhập hoặc tạo ít nhất một dãy số!");
+                return;
+            }
+
+            numbers.sort((a, b) => a - b);
+            const min = numbers[0];
+            const max = numbers[numbers.length - 1];
+            const k = parseInt(document.getElementById('rand-k').value) || 5;
+
+            // Tính độ rộng nhóm làm tròn đẹp
+            let width = (max - min) / k;
+            width = width === 0 ? 1 : Math.ceil(width);
+
+            const newGroups = [];
+            let currentLower = Math.floor(min);
+
+            for (let i = 0; i < k; i++) {
+                const currentUpper = currentLower + width;
+                newGroups.push({
+                    lower: currentLower,
+                    upper: currentUpper,
+                    freq: 0
+                });
+                currentLower = currentUpper;
+            }
+
+            // Đếm tần số cho từng nhóm
+            numbers.forEach(num => {
+                let placed = false;
+                for (let i = 0; i < newGroups.length; i++) {
+                    const isLast = (i === newGroups.length - 1);
+                    // Nhóm cuối cùng bao gồm cả đầu mút phải
+                    if (isLast ? (num >= newGroups[i].lower && num <= newGroups[i].upper) : (num >= newGroups[i].lower && num < newGroups[i].upper)) {
+                        newGroups[i].freq++;
+                        placed = true;
+                        break;
+                    }
+                }
+                if (!placed && newGroups.length > 0) {
+                    if (num >= newGroups[newGroups.length - 1].upper) {
+                        newGroups[newGroups.length - 1].freq++;
+                    } else if (num < newGroups[0].lower) {
+                        newGroups[0].freq++;
+                    }
+                }
+            });
+
+            // Cập nhật vào mảng groups chính
+            groups = newGroups;
+
+            // Hiển thị preview
+            const previewContainer = document.getElementById('random-group-preview');
+            const previewBody = document.getElementById('preview-table-body');
+            previewContainer.classList.remove('hidden');
+            previewBody.innerHTML = '';
+
+            groups.forEach((g, idx) => {
+                const mid = (g.lower + g.upper) / 2;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="py-2 px-3 font-bold text-slate-500">Nhóm ${idx + 1}</td>
+                    <td class="py-2 px-3 font-semibold text-slate-800">[${g.lower}; ${g.upper})</td>
+                    <td class="py-2 px-3 text-slate-600">${mid.toFixed(1)}</td>
+                    <td class="py-2 px-3 font-bold text-violet-700">${g.freq}</td>
+                `;
+                previewBody.appendChild(row);
+            });
+
+            // Cập nhật cỡ mẫu hiển thị
+            document.getElementById('quick-total-n').textContent = numbers.length;
+            document.getElementById('group-count').textContent = groups.length;
+
+            renderKaTeX();
+        }
+
+        // ==========================================
+        // TÍNH TOÁN CÁC ĐẠI LƯỢNG THỐNG KÊ
+        // ==========================================
+        function computeAll() {
+            if (activeMode === 'random') {
+                convertRawToGroups();
+            }
+
+            let n = 0;
+            let sum_nc = 0;
+            let sum_nc2 = 0;
+
+            const tableData = groups.map((g, i) => {
+                const ci = (g.lower + g.upper) / 2;
+                const freq = Number(g.freq) || 0;
+                n += freq;
+                sum_nc += freq * ci;
+                sum_nc2 += freq * ci * ci;
+                return {
+                    idx: i + 1,
+                    lower: g.lower,
+                    upper: g.upper,
+                    freq: freq,
+                    ci: ci,
+                    len: g.upper - g.lower
+                };
+            });
+
+            if (n === 0) {
+                alert("Cỡ mẫu bằng 0. Vui lòng nhập tần số lớn hơn 0!");
+                return;
+            }
+
+            // 1. Số trung bình
+            const mean = sum_nc / n;
+            const variance = Math.max(0, (sum_nc2 / n) - (mean * mean));
+            const sd = Math.sqrt(variance);
+
+            // 2. Khoảng biến thiên
+            const u1 = groups[0].lower;
+            const uk1 = groups[groups.length - 1].upper;
+            const range = uk1 - u1;
+
+            // Helper Tứ phân vị
+            function findQuartileData(targetK) {
+                const targetValue = (targetK * n) / 4;
+                let cum = 0;
+                let chosenGroup = null;
+                let prevCum = 0;
+
+                for (let i = 0; i < tableData.length; i++) {
+                    const before = cum;
+                    cum += tableData[i].freq;
+                    if (cum >= targetValue) {
+                        chosenGroup = tableData[i];
+                        prevCum = before;
+                        break;
+                    }
+                }
+                if (!chosenGroup) chosenGroup = tableData[tableData.length - 1];
+
+                const um = chosenGroup.lower;
+                const um1 = chosenGroup.upper;
+                const nm = chosenGroup.freq;
+                const len = um1 - um;
+                const val = nm === 0 ? um : (um + ((targetValue - prevCum) / nm) * len);
+
+                return {
+                    k: targetK,
+                    targetValue,
+                    chosenGroup,
+                    prevCum,
+                    val,
+                    um, um1, nm, len
+                };
+            }
+
+            const q1Data = findQuartileData(1);
+            const q2Data = findQuartileData(2); // Trung vị
+            const q3Data = findQuartileData(3);
+            const iqr = q3Data.val - q1Data.val;
+
+            // 3. Mốt (Mode)
+            let maxFreq = -1;
+            let modeIdx = 0;
+            tableData.forEach((g, i) => {
+                if (g.freq > maxFreq) {
+                    maxFreq = g.freq;
+                    modeIdx = i;
+                }
+            });
+
+            const modeGroup = tableData[modeIdx];
+            const nm = modeGroup.freq;
+            const nm_prev = (modeIdx > 0) ? tableData[modeIdx - 1].freq : 0;
+            const nm_next = (modeIdx < tableData.length - 1) ? tableData[modeIdx + 1].freq : 0;
+            const d1 = nm - nm_prev;
+            const d2 = nm - nm_next;
+            const denom = d1 + d2;
+            const modeVal = denom === 0 ? modeGroup.lower : (modeGroup.lower + (d1 / denom) * modeGroup.len);
+
+            // Outliers bound
+            const lowerOutlierBound = q1Data.val - 1.5 * iqr;
+            const upperOutlierBound = q3Data.val + 1.5 * iqr;
+
+            // Save to state
+            currentCalculations = {
+                n, sum_nc, sum_nc2, tableData,
+                mean, variance, sd,
+                u1, uk1, range,
+                q1Data, q2Data, q3Data, iqr,
+                modeGroup, modeIdx, nm, nm_prev, nm_next, d1, d2, modeVal,
+                lowerOutlierBound, upperOutlierBound
+            };
+
+            // Update UI elements
+            document.getElementById('val-mean').textContent = mean.toFixed(2);
+            document.getElementById('val-median').textContent = q2Data.val.toFixed(2);
+            document.getElementById('val-mode').textContent = modeVal.toFixed(2);
+            document.getElementById('val-range').textContent = range.toFixed(2);
+            document.getElementById('val-q1').textContent = q1Data.val.toFixed(2);
+            document.getElementById('val-q3').textContent = q3Data.val.toFixed(2);
+            document.getElementById('val-iqr').textContent = iqr.toFixed(2);
+            document.getElementById('val-var').textContent = variance.toFixed(2);
+            document.getElementById('val-sd').textContent = sd.toFixed(2);
+            document.getElementById('val-outliers-text').innerHTML = 
+                `$x < ${lowerOutlierBound.toFixed(2)}$ hoặc $x > ${upperOutlierBound.toFixed(2)}$`;
+
+            renderKaTeX();
+        }
+
+        function renderKaTeX() {
+            if (window.renderMathInElement) {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        // ==========================================
+        // POPUP MODAL: XEM CÔNG THỨC & CÁCH LÀM CHI TIẾT
+        // ==========================================
+        function openDetail(type) {
+            const c = currentCalculations;
+            if (!c.n) computeAll();
+
+            const modal = document.getElementById('detail-modal');
+            const title = document.getElementById('modal-title');
+            const formula = document.getElementById('modal-formula');
+            const params = document.getElementById('modal-params');
+            const steps = document.getElementById('modal-steps');
+
+            let formulaLatex = "";
+            let paramsList = [];
+            let stepsContent = "";
+
+            if (type === 'mean') {
+                title.textContent = "Cách tính Số trung bình (\\bar{x})";
+                formulaLatex = "$$\\bar{x} = \\dfrac{n_1c_1 + n_2c_2 + \\dots + n_kc_k}{n} = \\dfrac{1}{n}\\sum_{i=1}^k n_ic_i$$";
+                paramsList = [
+                    `Cỡ mẫu: $n = ${c.n}$`,
+                    `Tổng tích các giá trị đại diện và tần số $\\sum n_ic_i = ${c.sum_nc.toFixed(2)}$`
+                ];
+                stepsContent = `
+                    <p>1. Xác định giá trị đại diện $c_i = \\dfrac{u_i + u_{i+1}}{2}$ cho từng nhóm số liệu.</p>
+                    <p>2. Lấy tổng các tích $n_i \\cdot c_i = ${c.sum_nc.toFixed(2)}$.</p>
+                    <p>3. Thế số: $\\bar{x} = \\dfrac{${c.sum_nc.toFixed(2)}}{${c.n}} \\approx \\mathbf{${c.mean.toFixed(2)}}$.</p>
+                `;
+            } else if (type === 'median') {
+                title.textContent = "Cách tính Trung vị (M_e = Q_2)";
+                formulaLatex = "$$M_e = u_m + \\dfrac{\\dfrac{n}{2} - C}{n_m}(u_{m+1} - u_m)$$";
+                paramsList = [
+                    `Cỡ mẫu: $n = ${c.n} \\implies \\dfrac{n}{2} = ${c.q2Data.targetValue}$`,
+                    `Nhóm chứa trung vị là nhóm thứ ${c.q2Data.chosenGroup.idx}: $[${c.q2Data.um}; ${c.q2Data.um1})$ vì có tần số tích lũy đầu tiên lớn hơn hoặc bằng $\\dfrac{n}{2}$`,
+                    `Tần số của nhóm chứa trung vị: $n_m = ${c.q2Data.nm}$`,
+                    `Tần số tích lũy của các nhóm trước nó: $C = ${c.q2Data.prevCum}$`,
+                    `Độ dài nhóm: $u_{m+1} - u_m = ${c.q2Data.len}$`
+                ];
+                stepsContent = `
+                    <p>Thế số vào công thức:</p>
+                    <p class="font-semibold text-violet-900">$$M_e = ${c.q2Data.um} + \\dfrac{${c.q2Data.targetValue} - ${c.q2Data.prevCum}}{${c.q2Data.nm}} \\cdot (${c.q2Data.len}) = ${c.q2Data.um} + ${( ((c.q2Data.targetValue - c.q2Data.prevCum) / c.q2Data.nm) * c.q2Data.len ).toFixed(2)} = \\mathbf{${c.q2Data.val.toFixed(2)}}$$</p>
+                `;
+            } else if (type === 'mode') {
+                title.textContent = "Cách tính Mốt (M_o)";
+                formulaLatex = "$$M_o = u_m + \\dfrac{n_m - n_{m-1}}{(n_m - n_{m-1}) + (n_m - n_{m+1})}(u_{m+1} - u_m)$$";
+                paramsList = [
+                    `Nhóm chứa mốt: $[${c.modeGroup.lower}; ${c.modeGroup.upper})$ với tần số lớn nhất $n_m = ${c.nm}$`,
+                    `Tần số nhóm liền trước: $n_{m-1} = ${c.nm_prev}$`,
+                    `Tần số nhóm liền sau: $n_{m+1} = ${c.nm_next}$`,
+                    `Hiệu $n_m - n_{m-1} = ${c.d1}$`,
+                    `Hiệu $n_m - n_{m+1} = ${c.d2}$`,
+                    `Độ dài của nhóm: $u_{m+1} - u_m = ${c.modeGroup.len}$`
+                ];
+                stepsContent = `
+                    <p>Thế số vào công thức:</p>
+                    <p class="font-semibold text-emerald-900">$$M_o = ${c.modeGroup.lower} + \\dfrac{${c.d1}}{${c.d1} + ${c.d2}} \\cdot ${c.modeGroup.len} = \\mathbf{${c.modeVal.toFixed(2)}}$$</p>
+                `;
+            } else if (type === 'range') {
+                title.textContent = "Cách tính Khoảng biến thiên (R)";
+                formulaLatex = "$$R = u_{k+1} - u_1$$";
+                paramsList = [
+                    `Đầu mút phải của nhóm cuối: $u_{k+1} = ${c.uk1}$`,
+                    `Đầu mút trái của nhóm đầu tiên: $u_1 = ${c.u1}$`
+                ];
+                stepsContent = `
+                    <p>$$R = ${c.uk1} - ${c.u1} = \\mathbf{${c.range.toFixed(2)}}$$</p>
+                `;
+            } else if (type === 'q1') {
+                title.textContent = "Cách tính Tứ phân vị thứ nhất (Q_1)";
+                formulaLatex = "$$Q_1 = u_m + \\dfrac{\\dfrac{n}{4} - C}{n_m}(u_{m+1} - u_m)$$";
+                paramsList = [
+                    `Vị trí cần tìm: $\\dfrac{n}{4} = \\dfrac{${c.n}}{4} = ${c.q1Data.targetValue}$`,
+                    `Nhóm chứa $Q_1$: $[${c.q1Data.um}; ${c.q1Data.um1})$`,
+                    `Tần số nhóm chứa $Q_1$: $n_m = ${c.q1Data.nm}$`,
+                    `Tần số tích lũy của các nhóm trước: $C = ${c.q1Data.prevCum}$`,
+                    `Độ dài nhóm: ${c.q1Data.len}`
+                ];
+                stepsContent = `
+                    <p>$$Q_1 = ${c.q1Data.um} + \\dfrac{${c.q1Data.targetValue} - ${c.q1Data.prevCum}}{${c.q1Data.nm}} \\cdot ${c.q1Data.len} = \\mathbf{${c.q1Data.val.toFixed(2)}}$$</p>
+                `;
+            } else if (type === 'q3') {
+                title.textContent = "Cách tính Tứ phân vị thứ ba (Q_3)";
+                formulaLatex = "$$Q_3 = u_m + \\dfrac{\\dfrac{3n}{4} - C}{n_m}(u_{m+1} - u_m)$$";
+                paramsList = [
+                    `Vị trí cần tìm: $\\dfrac{3n}{4} = \\dfrac{3 \\cdot ${c.n}}{4} = ${c.q3Data.targetValue}$`,
+                    `Nhóm chứa $Q_3$: $[${c.q3Data.um}; ${c.q3Data.um1})$`,
+                    `Tần số nhóm chứa $Q_3$: $n_m = ${c.q3Data.nm}$`,
+                    `Tần số tích lũy nhóm trước: $C = ${c.q3Data.prevCum}$`,
+                    `Độ dài nhóm: ${c.q3Data.len}`
+                ];
+                stepsContent = `
+                    <p>$$Q_3 = ${c.q3Data.um} + \\dfrac{${c.q3Data.targetValue} - ${c.q3Data.prevCum}}{${c.q3Data.nm}} \\cdot ${c.q3Data.len} = \\mathbf{${c.q3Data.val.toFixed(2)}}$$</p>
+                `;
+            } else if (type === 'iqr') {
+                title.textContent = "Cách tính Khoảng tứ phân vị (\\Delta_Q)";
+                formulaLatex = "$$\\Delta_Q = Q_3 - Q_1$$";
+                paramsList = [
+                    `Tứ phân vị thứ ba: $Q_3 = ${c.q3Data.val.toFixed(2)}$`,
+                    `Tứ phân vị thứ nhất: $Q_1 = ${c.q1Data.val.toFixed(2)}$`
+                ];
+                stepsContent = `
+                    <p>$$\\Delta_Q = ${c.q3Data.val.toFixed(2)} - ${c.q1Data.val.toFixed(2)} = \\mathbf{${c.iqr.toFixed(2)}}$$</p>
+                `;
+            } else if (type === 'var_sd') {
+                title.textContent = "Cách tính Phương sai (S^2) & Độ lệch chuẩn (S)";
+                formulaLatex = "$$S^2 = \\dfrac{1}{n}\\sum_{i=1}^k n_i c_i^2 - \\bar{x}^2, \\quad S = \\sqrt{S^2}$$";
+                paramsList = [
+                    `Cỡ mẫu: $n = ${c.n}$`,
+                    `Số trung bình: $\\bar{x} = ${c.mean.toFixed(2)}$`,
+                    `Tổng các bình phương: $\\sum n_i c_i^2 = ${c.sum_nc2.toFixed(2)}$`
+                ];
+                stepsContent = `
+                    <p>1. Phương sai $S^2$:</p>
+                    <p>$$S^2 = \\dfrac{${c.sum_nc2.toFixed(2)}}{${c.n}} - (${c.mean.toFixed(2)})^2 = ${(c.sum_nc2 / c.n).toFixed(2)} - ${(c.mean * c.mean).toFixed(2)} = \\mathbf{${c.variance.toFixed(2)}}$$</p>
+                    <p class="mt-2">2. Độ lệch chuẩn $S$:</p>
+                    <p>$$S = \\sqrt{S^2} = \\sqrt{${c.variance.toFixed(2)}} = \\mathbf{${c.sd.toFixed(2)}}$$</p>
+                `;
+            } else if (type === 'outliers') {
+                title.textContent = "Xác định Giá trị ngoại lệ";
+                formulaLatex = "$$x < Q_1 - 1{,}5\\Delta_Q \\quad \\text{hoặc} \\quad x > Q_3 + 1{,}5\\Delta_Q$$";
+                paramsList = [
+                    `Tứ phân vị $Q_1 = ${c.q1Data.val.toFixed(2)}$, $Q_3 = ${c.q3Data.val.toFixed(2)}$`,
+                    `Khoảng tứ phân vị $\\Delta_Q = ${c.iqr.toFixed(2)}$`,
+                    `Biên dưới: $Q_1 - 1{,}5\\Delta_Q = ${c.q1Data.val.toFixed(2)} - 1{,}5 \\cdot ${c.iqr.toFixed(2)} = ${c.lowerOutlierBound.toFixed(2)}$`,
+                    `Biên trên: $Q_3 + 1{,}5\\Delta_Q = ${c.q3Data.val.toFixed(2)} + 1{,}5 \\cdot ${c.iqr.toFixed(2)} = ${c.upperOutlierBound.toFixed(2)}$`
+                ];
+                stepsContent = `
+                    <p>Một giá trị dữ liệu $x$ được coi là ngoại lệ khi thỏa mãn:</p>
+                    <p class="font-bold text-amber-900 mt-1">$$x < ${c.lowerOutlierBound.toFixed(2)} \\quad \\text{hoặc} \\quad x > ${c.upperOutlierBound.toFixed(2)}$$</p>
+                `;
+            }
+
+            formula.innerHTML = formulaLatex;
+            params.innerHTML = paramsList.map(p => `<div>• ${p}</div>`).join('');
+            steps.innerHTML = stepsContent;
+
+            modal.classList.remove('hidden');
+
+            if (window.renderMathInElement) {
+                renderMathInElement(document.getElementById('modal-content'), {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('detail-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTableRows();
+            computeAll();
+        });
+    </script>
+</body>
+</html>
